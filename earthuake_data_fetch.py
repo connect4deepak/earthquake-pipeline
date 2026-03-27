@@ -44,3 +44,27 @@ logging.basicConfig(
     ],
 )
 log = logging.getLogger(__name__)
+
+CREATE_TABLE_SQL = """
+CREATE TABLE IF NOT EXISTS earthquakes (
+    id             SERIAL PRIMARY KEY,
+    event_id       VARCHAR(30)  NOT NULL UNIQUE,   
+    magnitude      FLOAT,
+    magnitude_type VARCHAR(10),
+    place          TEXT,
+    event_time     TIMESTAMPTZ,
+    depth_km       FLOAT,
+    latitude       FLOAT,
+    longitude      FLOAT,
+    alert          VARCHAR(10),
+    tsunami        SMALLINT,
+    sig            INT,                           
+    url            TEXT,
+    status         VARCHAR(20),
+    net            VARCHAR(10),               
+    fetched_at     TIMESTAMPTZ  DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_earthquakes_event_time ON earthquakes (event_time DESC);
+CREATE INDEX IF NOT EXISTS idx_earthquakes_magnitude  ON earthquakes (magnitude DESC);
+"""
