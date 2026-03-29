@@ -10,7 +10,6 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 #from dotenv import load_dotenv
 
-# Load .env from the same directory as this script
 SCRIPT_DIR = Path(__file__).parent.resolve()
 # load_dotenv(SCRIPT_DIR / ".env")
 DB_CONFIG = {
@@ -183,3 +182,37 @@ def export_csv(events: list[dict]) -> Path:
     df.to_csv(csv_path, index=False)
     log.info("CSV exported → %s  (%d rows)", csv_path, len(df))
     return csv_path
+
+#  Main function
+def main():
+    log.info("=" * 60)
+    log.info("Earthquake pipeline run started")
+    events = fetch_usgs_events()
+    export_csv(events)
+
+    if not events:
+        log.warning("No events fetched — nothing to insert")
+        return
+
+    # Store in DB
+    try:
+        conn = get_connection()
+        ensure_table(conn)
+        inserted, skipped = insert_events(conn, events)
+        log.info(
+            "DB: %d new record(s) inserted, %d duplicate(s) skipped",
+            inserted, skipped
+        )
+        conn.close()
+    except psycopg2.OperationalError as exc:
+        log.error("Database connection failed: %s", exc)
+        sys.exit(1)
+    except Exception as exc:
+        log.exception("Unexpected DB error: %s", exc)
+        sys.exit(1)
+
+    log.info("Pipeline run complete")
+    log.info("=" * 60)
+
+if __name__ == "__main__":
+    main()
