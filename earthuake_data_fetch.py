@@ -53,10 +53,10 @@ CREATE TABLE IF NOT EXISTS earthquakes (
     longitude      FLOAT,
     alert          VARCHAR(10),
     tsunami        SMALLINT,
-    sig            INT,                             -- USGS significance score
+    sig            INT,                            
     url            TEXT,
     status         VARCHAR(20),
-    net            VARCHAR(10),                     -- contributing network
+    net            VARCHAR(10),                    
     fetched_at     TIMESTAMPTZ  DEFAULT NOW()
 );
 
@@ -118,7 +118,7 @@ def fetch_usgs_events(lookback_minutes: int = LOOKBACK_MINUTES) -> list[dict]:
         "starttime": starttime.strftime("%Y-%m-%dT%H:%M:%S"),
         "endtime":   now.strftime("%Y-%m-%dT%H:%M:%S"),
         "orderby":   "time",
-        "limit":     500,                  # max per call
+        "limit":     500,                
     }
 
     log.info("Fetching data from USGS API (%d-minute window)…", lookback_minutes)
@@ -138,7 +138,7 @@ def fetch_usgs_events(lookback_minutes: int = LOOKBACK_MINUTES) -> list[dict]:
     for feature in features:
         props = feature.get("properties", {})
         geom  = feature.get("geometry",   {})
-        coords = geom.get("coordinates", [None, None, None])   # [lon, lat, depth_km]
+        coords = geom.get("coordinates", [None, None, None])
 
         # Convert epoch milliseconds → timezone-aware datetime
         epoch_ms = props.get("time")
@@ -163,5 +163,23 @@ def fetch_usgs_events(lookback_minutes: int = LOOKBACK_MINUTES) -> list[dict]:
             "status":         props.get("status"),
             "net":            props.get("net"),
         })
-        
+
     return events
+
+# CSV export
+def export_csv(events: list[dict]) -> Path:
+    """
+    Write the fetched events to a timestamped CSV file.
+    Returns the path of the created file.
+    """
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    csv_path  = CSV_OUTPUT_DIR / f"earthquakes_{timestamp}.csv"
+
+    if not events:
+        log.warning("No events to export — CSV not written")
+        return csv_path
+
+    df = pd.DataFrame(events)
+    df.to_csv(csv_path, index=False)
+    log.info("CSV exported → %s  (%d rows)", csv_path, len(df))
+    return csv_path
