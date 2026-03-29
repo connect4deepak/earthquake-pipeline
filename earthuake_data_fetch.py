@@ -103,3 +103,65 @@ def insert_events(conn, events: list[dict]) -> tuple[int, int]:
                 skipped += 1
     conn.commit()
     return inserted, skipped
+
+# USGS API fetch
+def fetch_usgs_events(lookback_minutes: int = LOOKBACK_MINUTES) -> list[dict]:
+    """
+    Query USGS FDSN API for earthquakes in the past `lookback_minutes`.
+    Returns a list of normalised dicts ready for DB insertion.
+    """
+    now       = datetime.now(timezone.utc)
+    starttime = now - timedelta(minutes=lookback_minutes)
+
+    params = {
+        "format":    "geojson",
+        "starttime": starttime.strftime("%Y-%m-%dT%H:%M:%S"),
+        "endtime":   now.strftime("%Y-%m-%dT%H:%M:%S"),
+        "orderby":   "time",
+        "limit":     500,                  # max per call
+    }
+
+    log.info("Fetching data from USGS API (%d-minute window)…", lookback_minutes)
+
+    try:
+        resp = requests.get(USGS_API_URL, params=params, timeout=30)
+        resp.raise_for_status()
+    except requests.RequestException as exc:
+        log.error("USGS API request failed: %s", exc)
+        return []
+
+    data     = resp.json()
+    features = data.get("features", [])
+    log.info("Fetched %d events from USGS", len(features))
+
+    events = []
+    for feature in features:
+        props = feature.get("properties", {})
+        geom  = feature.get("geometry",   {})
+        coords = geom.get("coordinates", [None, None, None])   # [lon, lat, depth_km]
+
+        # Convert epoch milliseconds → timezone-aware datetime
+        epoch_ms = props.get("time")
+        event_time = (
+            datetime.fromtimestamp(epoch_ms / 1000, tz=timezone.utc)
+            if epoch_ms else None
+        )
+
+        events.append({
+            "event_id":       feature.get("id"),
+            "magnitude":      props.get("mag"),
+            "magnitude_type": props.get("magType"),
+            "place":          props.get("place"),
+            "event_time":     event_time,
+            "depth_km":       coords[2],
+            "latitude":       coords[1],
+            "longitude":      coords[0],
+            "alert":          props.get("alert"),
+            "tsunami":        int(props.get("tsunami", 0) or 0),
+            "sig":            props.get("sig"),
+            "url":            props.get("url"),
+            "status":         props.get("status"),
+            "net":            props.get("net"),
+        })
+        
+    return events
