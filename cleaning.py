@@ -29,3 +29,10 @@ COLUMN_RENAME_MAP = {
     "status":     "status",
     "id":         "raw_id",
 }
+
+def normalise_schema(df: pd.DataFrame) -> pd.DataFrame:
+    """Rename raw columns to the pipeline's internal naming convention."""
+    df = df.rename(columns={k: v for k, v in COLUMN_RENAME_MAP.items()
+                             if k in df.columns})
+    logger.info(f"[schema]     {len(df):,} rows after column rename.")
+    return df
