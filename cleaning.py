@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 # Schema Normalisation
 COLUMN_RENAME_MAP = {
     "mag":        "magnitude",
-    "magnitude":  "magnitude",   # already correct
+    "magnitude":  "magnitude", 
     "lat":        "latitude",
     "latitude":   "latitude",
     "lon":        "longitude",
@@ -36,3 +36,28 @@ def normalise_schema(df: pd.DataFrame) -> pd.DataFrame:
                              if k in df.columns})
     logger.info(f"[schema]     {len(df):,} rows after column rename.")
     return df
+
+# Type Coercion 
+def coerce_types(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Cast columns to the correct Python / pandas dtype.
+    Rows that cannot be coerced are set to NaN (errors='coerce').
+    """
+    numeric_cols = ["magnitude", "latitude", "longitude", "depth_km"]
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    if "event_time" in df.columns:
+        df["event_time"] = pd.to_datetime(df["event_time"],
+                                          utc=True, errors="coerce")
+
+    # Normalise free-text fields
+    for col in ["place", "event_type", "mag_type", "status"]:
+        if col in df.columns:
+            df[col] = df[col].astype(str).str.strip().str.lower()
+            df[col] = df[col].replace({"nan": np.nan, "none": np.nan, "": np.nan})
+
+    logger.info(f"[types]      {len(df):,} rows after type coercion.")
+    return df
+
