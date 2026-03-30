@@ -9,3 +9,23 @@ from config import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Schema Normalisation
+COLUMN_RENAME_MAP = {
+    "mag":        "magnitude",
+    "magnitude":  "magnitude",   # already correct
+    "lat":        "latitude",
+    "latitude":   "latitude",
+    "lon":        "longitude",
+    "longitude":  "longitude",
+    "depth":      "depth_km",
+    "time":       "event_time",
+    "updated":    "updated_time",
+    "place":      "place",
+    "type":       "event_type",
+    "magtype":        "mag_type",
+    "magnitude_type":  "mag_type",
+    "magType":    "mag_type",
+    "status":     "status",
+    "id":         "raw_id",
+}
