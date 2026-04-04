@@ -61,3 +61,28 @@ def coerce_types(df: pd.DataFrame) -> pd.DataFrame:
     logger.info(f"[types]      {len(df):,} rows after type coercion.")
     return df
 
+# Null Handling 
+REQUIRED_COLS = ["magnitude", "latitude", "longitude", "depth_km", "event_time"]
+
+def handle_nulls(df: pd.DataFrame) -> pd.DataFrame:
+    null_counts = df[REQUIRED_COLS].isnull().sum()
+    for col, n in null_counts.items():
+        if n:
+            logger.warning(f"[nulls]  '{col}' has {n:,} null values — rows will be dropped.")
+
+    before = len(df)
+    df = df.dropna(subset=REQUIRED_COLS)
+    after  = len(df)
+    dropped = before - after
+    if dropped:
+        logger.info(f"[nulls]      Dropped {dropped:,} rows with null required fields. "
+                    f"{after:,} rows remain.")
+    else:
+        logger.info(f"[nulls]      No null required-field rows found.")
+
+    # Fill optional text fields
+    for col in ["place", "event_type", "mag_type", "status"]:
+        if col in df.columns:
+            df[col] = df[col].fillna("unknown")
+
+    return df
