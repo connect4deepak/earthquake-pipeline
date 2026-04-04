@@ -95,3 +95,15 @@ def add_distance_feature(df: pd.DataFrame) -> pd.DataFrame:
         f"max={df['distance_from_ref_km'].max():.0f} km)."
     )
     return df
+
+# Orchestrator 
+def run_feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
+    logger.info("=" * 60)
+    logger.info("STAGE 2 — Feature Engineering")
+    logger.info("=" * 60)
+    df = add_time_features(df)
+    df = add_magnitude_category(df)
+    df = add_depth_category(df)
+    df = add_distance_feature(df)
+    logger.info(f"Feature engineering complete. Columns: {list(df.columns)}")
+    return df
