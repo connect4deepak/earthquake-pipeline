@@ -128,3 +128,26 @@ def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
         logger.info(f"[duplicates] No duplicate rows found.")
     return df
 
+# Outlier Detection 
+def _iqr_bounds(series: pd.Series, multiplier: float):
+    Q1 = series.quantile(0.25)
+    Q3 = series.quantile(0.75)
+    IQR = Q3 - Q1
+    return Q1 - multiplier * IQR, Q3 + multiplier * IQR
+
+def remove_outliers(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df["is_outlier"] = False
+
+    for col in ["magnitude", "depth_km"]:
+        lo, hi = _iqr_bounds(df[col], IQR_MULTIPLIER)
+        flag = ~df[col].between(lo, hi)
+        count = flag.sum()
+        if count:
+            logger.info(f"[outliers]   '{col}' — {count:,} rows outside "
+                        f"[{lo:.2f}, {hi:.2f}] (IQR×{IQR_MULTIPLIER}) — "
+                        f"flagged as is_outlier=True (not dropped).")
+        df.loc[flag, "is_outlier"] = True
+
+    return df
+
