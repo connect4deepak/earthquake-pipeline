@@ -36,4 +36,43 @@ def get_last_processed_id() -> int:
         with conn.cursor() as cur:
             cur.execute(query)
             return cur.fetchone()[0]
- 
+        
+# Write
+def _to_native(val):
+
+    if isinstance(val, np.integer):
+        return int(val)
+    if isinstance(val, np.floating):
+        return None if np.isnan(val) else float(val)
+    if isinstance(val, np.bool_):
+        return bool(val)
+    if isinstance(val, float) and np.isnan(val):
+        return None
+    return val
+
+def save_processed(df: pd.DataFrame) -> None:
+
+    if df.empty:
+        logger.warning("save_processed called with empty DataFrame — skipping.")
+        return
+    df = df.copy()
+    for col in df.columns:
+        df[col] = df[col].apply(_to_native)
+
+    cols = list(df.columns)
+    rows = [tuple(r) for r in df.itertuples(index=False)]
+    update_cols = [c for c in cols if c != "raw_id"]
+    update_clause = ", ".join(f"{c} = EXCLUDED.{c}" for c in update_cols)
+
+    insert_sql = f"""
+        INSERT INTO {PROCESSED_TABLE} ({', '.join(cols)})
+        VALUES %s
+        ON CONFLICT (raw_id) DO UPDATE SET {update_clause};
+    """
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            execute_values(cur, insert_sql, rows)
+        conn.commit()
+
+    logger.info(f"Upserted {len(df):,} rows into '{PROCESSED_TABLE}'.")
