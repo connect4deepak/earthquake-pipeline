@@ -42,7 +42,7 @@ log = logging.getLogger(__name__)
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS earthquakes (
     id             SERIAL PRIMARY KEY,
-    event_id       VARCHAR(30)  NOT NULL UNIQUE,   -- USGS unique ID  e.g. us7000pxyz
+    event_id       VARCHAR(30)  NOT NULL UNIQUE,  
     magnitude      FLOAT,
     magnitude_type VARCHAR(10),
     place          TEXT,
@@ -77,21 +77,15 @@ ON CONFLICT (event_id) DO NOTHING;
 """
 
 def get_connection():
-    """Return a psycopg2 connection."""
     return psycopg2.connect(**DB_CONFIG)
 
 def ensure_table(conn):
-    """Create table + indexes if they don't exist."""
     with conn.cursor() as cur:
         cur.execute(CREATE_TABLE_SQL)
     conn.commit()
     log.info("Table created/verified")
 
 def insert_events(conn, events: list[dict]) -> tuple[int, int]:
-    """
-    Bulk-insert earthquake events.
-    Returns (inserted_count, skipped_count).
-    """
     inserted = skipped = 0
     with conn.cursor() as cur:
         for ev in events:
@@ -105,10 +99,6 @@ def insert_events(conn, events: list[dict]) -> tuple[int, int]:
 
 # USGS API fetch
 def fetch_usgs_events(lookback_minutes: int = LOOKBACK_MINUTES) -> list[dict]:
-    """
-    Query USGS FDSN API for earthquakes in the past `lookback_minutes`.
-    Returns a list of normalised dicts ready for DB insertion.
-    """
     now       = datetime.now(timezone.utc)
     starttime = now - timedelta(minutes=lookback_minutes)
 
@@ -167,10 +157,6 @@ def fetch_usgs_events(lookback_minutes: int = LOOKBACK_MINUTES) -> list[dict]:
 
 # CSV export
 def export_csv(events: list[dict]) -> Path:
-    """
-    Write the fetched events to a timestamped CSV file.
-    Returns the path of the created file.
-    """
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     csv_path  = CSV_OUTPUT_DIR / f"earthquakes_{timestamp}.csv"
 

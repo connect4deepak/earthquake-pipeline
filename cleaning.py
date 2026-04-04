@@ -34,15 +34,11 @@ def normalise_schema(df: pd.DataFrame) -> pd.DataFrame:
     """Rename raw columns to the pipeline's internal naming convention."""
     df = df.rename(columns={k: v for k, v in COLUMN_RENAME_MAP.items()
                              if k in df.columns})
-    logger.info(f"[schema]     {len(df):,} rows after column rename.")
+    logger.info(f"[schema] {len(df):,} rows after column rename.")
     return df
 
 # Type Coercion 
 def coerce_types(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Cast columns to the correct Python / pandas dtype.
-    Rows that cannot be coerced are set to NaN (errors='coerce').
-    """
     numeric_cols = ["magnitude", "latitude", "longitude", "depth_km"]
     for col in numeric_cols:
         if col in df.columns:
@@ -51,14 +47,13 @@ def coerce_types(df: pd.DataFrame) -> pd.DataFrame:
     if "event_time" in df.columns:
         df["event_time"] = pd.to_datetime(df["event_time"],
                                           utc=True, errors="coerce")
-
     # Normalise free-text fields
     for col in ["place", "event_type", "mag_type", "status"]:
         if col in df.columns:
             df[col] = df[col].astype(str).str.strip().str.lower()
             df[col] = df[col].replace({"nan": np.nan, "none": np.nan, "": np.nan})
 
-    logger.info(f"[types]      {len(df):,} rows after type coercion.")
+    logger.info(f"[types] {len(df):,} rows after type coercion.")
     return df
 
 # Null Handling 
@@ -75,15 +70,14 @@ def handle_nulls(df: pd.DataFrame) -> pd.DataFrame:
     after  = len(df)
     dropped = before - after
     if dropped:
-        logger.info(f"[nulls]      Dropped {dropped:,} rows with null required fields. "
+        logger.info(f"[nulls]  Dropped {dropped:,} rows with null required fields. "
                     f"{after:,} rows remain.")
     else:
-        logger.info(f"[nulls]      No null required-field rows found.")
+        logger.info(f"[nulls]  No null required-field rows found.")
 
     for col in ["place", "event_type", "mag_type", "status"]:
         if col in df.columns:
             df[col] = df[col].fillna("unknown")
-
     return df
 
 # Range Validation 
@@ -100,16 +94,15 @@ def validate_ranges(df: pd.DataFrame) -> pd.DataFrame:
     df = df[mask].copy()
     dropped = before - len(df)
     if dropped:
-        logger.info(f"[ranges]     Dropped {dropped:,} rows outside valid physical ranges. "
+        logger.info(f"[ranges]  Dropped {dropped:,} rows outside valid physical ranges. "
                     f"{len(df):,} rows remain.")
     else:
-        logger.info(f"[ranges]     All rows pass range validation.")
+        logger.info(f"[ranges] All rows pass range validation.")
     return df
 
 # Duplicate Removal
 def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
     before = len(df)
-
     df = df.drop_duplicates()
 
     # Soft duplicates — same event, multiple ingestion records
@@ -119,7 +112,6 @@ def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
                 .sort_values("raw_id"))
     else:
         df = df.drop_duplicates(subset=["latitude", "longitude", "event_time"])
-
     dropped = before - len(df)
     if dropped:
         logger.info(f"[duplicates] Removed {dropped:,} duplicate rows. "
@@ -148,6 +140,21 @@ def remove_outliers(df: pd.DataFrame) -> pd.DataFrame:
                         f"[{lo:.2f}, {hi:.2f}] (IQR×{IQR_MULTIPLIER}) — "
                         f"flagged as is_outlier=True (not dropped).")
         df.loc[flag, "is_outlier"] = True
-
     return df
 
+# Orchestrator
+def run_cleaning(df: pd.DataFrame) -> pd.DataFrame:
+    logger.info("=" * 60)
+    logger.info("STAGE 1 — Data Cleaning & Validation")
+    logger.info(f"Input: {len(df):,} rows")
+    logger.info("=" * 60)
+
+    df = normalise_schema(df)
+    df = coerce_types(df)
+    df = handle_nulls(df)
+    df = validate_ranges(df)
+    df = remove_duplicates(df)
+    df = remove_outliers(df)
+    
+    logger.info(f"Cleaning complete. Output: {len(df):,} rows.")
+    return df

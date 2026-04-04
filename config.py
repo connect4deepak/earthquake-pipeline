@@ -8,7 +8,7 @@ DB_CONFIG = {
 
 # Raw table written by cron job
 RAW_TABLE = "earthquakes"
-# Output table for the processed / feature-engineered data
+# Output table for the processed and feature-engineered data
 PROCESSED_TABLE = "earthquakes_processed"
 
 #  Cleaning thresholds
