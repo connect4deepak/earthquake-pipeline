@@ -76,3 +76,48 @@ def save_processed(df: pd.DataFrame) -> None:
         conn.commit()
 
     logger.info(f"Upserted {len(df):,} rows into '{PROCESSED_TABLE}'.")
+
+def create_processed_table() -> None:
+    ddl = f"""
+    CREATE TABLE IF NOT EXISTS {PROCESSED_TABLE} (
+        raw_id                  BIGINT          PRIMARY KEY,
+        magnitude               NUMERIC(5,2),
+        latitude                NUMERIC(9,5),
+        longitude               NUMERIC(9,5),
+        depth_km                NUMERIC(8,3),
+        event_time              TIMESTAMPTZ,
+        place                   TEXT,
+        mag_type                TEXT,
+        event_type              TEXT,
+        status                  TEXT,
+        year                    SMALLINT,
+        month                   SMALLINT,
+        day_of_week             SMALLINT,
+        hour                    SMALLINT,
+        is_weekend              BOOLEAN,
+        hour_sin                NUMERIC(10,8),
+        hour_cos                NUMERIC(10,8),
+        month_sin               NUMERIC(10,8),
+        month_cos               NUMERIC(10,8),
+        mag_category            TEXT,
+        depth_category          TEXT,
+        distance_from_ref_km    NUMERIC(10,3),
+        is_outlier              BOOLEAN         DEFAULT FALSE,
+        magnitude_scaled        NUMERIC(10,6),
+        depth_scaled            NUMERIC(10,6),
+        latitude_scaled         NUMERIC(10,6),
+        longitude_scaled        NUMERIC(10,6),
+        pipeline_version        TEXT,
+        processed_at            TIMESTAMPTZ     DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_ep_event_time     ON {PROCESSED_TABLE} (event_time);
+    CREATE INDEX IF NOT EXISTS idx_ep_magnitude      ON {PROCESSED_TABLE} (magnitude);
+    CREATE INDEX IF NOT EXISTS idx_ep_mag_category   ON {PROCESSED_TABLE} (mag_category);
+    CREATE INDEX IF NOT EXISTS idx_ep_depth_category ON {PROCESSED_TABLE} (depth_category);
+    CREATE INDEX IF NOT EXISTS idx_ep_location       ON {PROCESSED_TABLE} (latitude, longitude);
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(ddl)
+        conn.commit()
+    logger.info(f"Table '{PROCESSED_TABLE}' is ready.")
