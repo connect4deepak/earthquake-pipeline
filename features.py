@@ -69,3 +69,29 @@ def add_depth_category(df: pd.DataFrame) -> pd.DataFrame:
     counts = df["depth_category"].value_counts().to_dict()
     logger.info(f"[features]   depth_category distribution: {counts}")
     return df
+
+# Distance Feature 
+def _haversine_km(lat1, lon1, lat2, lon2):
+    R = 6371.0 
+    lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    a = np.sin(dlat / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2
+    return R * 2 * np.arcsin(np.sqrt(a))
+
+def add_distance_feature(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df["distance_from_ref_km"] = _haversine_km(
+        df["latitude"].values,
+        df["longitude"].values,
+        REFERENCE_LAT,
+        REFERENCE_LON,
+    ).round(3)
+    logger.info(
+        f"[features]   distance_from_ref_km added "
+        f"(ref = {REFERENCE_LABEL}; "
+        f"min={df['distance_from_ref_km'].min():.0f} km, "
+        f"max={df['distance_from_ref_km'].max():.0f} km)."
+    )
+    return df
