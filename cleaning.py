@@ -80,7 +80,6 @@ def handle_nulls(df: pd.DataFrame) -> pd.DataFrame:
     else:
         logger.info(f"[nulls]      No null required-field rows found.")
 
-    # Fill optional text fields
     for col in ["place", "event_type", "mag_type", "status"]:
         if col in df.columns:
             df[col] = df[col].fillna("unknown")
@@ -105,5 +104,27 @@ def validate_ranges(df: pd.DataFrame) -> pd.DataFrame:
                     f"{len(df):,} rows remain.")
     else:
         logger.info(f"[ranges]     All rows pass range validation.")
+    return df
+
+# Duplicate Removal
+def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
+    before = len(df)
+
+    df = df.drop_duplicates()
+
+    # Soft duplicates — same event, multiple ingestion records
+    if "updated_time" in df.columns and "raw_id" in df.columns:
+        df = (df.sort_values("updated_time", ascending=False)
+                .drop_duplicates(subset=["latitude", "longitude", "event_time"])
+                .sort_values("raw_id"))
+    else:
+        df = df.drop_duplicates(subset=["latitude", "longitude", "event_time"])
+
+    dropped = before - len(df)
+    if dropped:
+        logger.info(f"[duplicates] Removed {dropped:,} duplicate rows. "
+                    f"{len(df):,} rows remain.")
+    else:
+        logger.info(f"[duplicates] No duplicate rows found.")
     return df
 
