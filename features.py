@@ -48,3 +48,24 @@ def add_magnitude_category(df: pd.DataFrame) -> pd.DataFrame:
     counts = df["mag_category"].value_counts().to_dict()
     logger.info(f"[features]   mag_category distribution: {counts}")
     return df
+
+# Depth Category 
+# Standard USGS seismological classification:
+#   0  –  70 km   Shallow      – cause most damage (closest to surface)
+#   70 – 300 km   Intermediate – reduced but still significant surface impact
+#   > 300 km      Deep         – rarely cause surface damage
+
+_DEPTH_BINS   = [0, 70, 300, 700]
+_DEPTH_LABELS = ["shallow", "intermediate", "deep"]
+
+def add_depth_category(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df["depth_category"] = pd.cut(
+        df["depth_km"],
+        bins=_DEPTH_BINS,
+        labels=_DEPTH_LABELS,
+        include_lowest=True,
+    ).astype(str)
+    counts = df["depth_category"].value_counts().to_dict()
+    logger.info(f"[features]   depth_category distribution: {counts}")
+    return df
