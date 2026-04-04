@@ -86,3 +86,24 @@ def handle_nulls(df: pd.DataFrame) -> pd.DataFrame:
             df[col] = df[col].fillna("unknown")
 
     return df
+
+# Range Validation 
+def validate_ranges(df: pd.DataFrame) -> pd.DataFrame:
+    before = len(df)
+
+    mask = (
+        df["magnitude"].between(MAGNITUDE_MIN, MAGNITUDE_MAX) &
+        df["latitude"].between(*LAT_RANGE) &
+        df["longitude"].between(*LON_RANGE) &
+        df["depth_km"].between(DEPTH_MIN_KM, DEPTH_MAX_KM)
+    )
+
+    df = df[mask].copy()
+    dropped = before - len(df)
+    if dropped:
+        logger.info(f"[ranges]     Dropped {dropped:,} rows outside valid physical ranges. "
+                    f"{len(df):,} rows remain.")
+    else:
+        logger.info(f"[ranges]     All rows pass range validation.")
+    return df
+
