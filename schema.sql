@@ -13,3 +13,14 @@ CREATE TABLE IF NOT EXISTS earthquakes_processed (
     mag_type                TEXT,
     event_type              TEXT,
     status                  TEXT,
+
+    -- Time features 
+    year                    SMALLINT,
+    month                   SMALLINT,       
+    day_of_week             SMALLINT,       
+    hour                    SMALLINT,       
+    is_weekend              BOOLEAN,
+    hour_sin                NUMERIC(10,8),
+    hour_cos                NUMERIC(10,8),
+    month_sin               NUMERIC(10,8),
+    month_cos               NUMERIC(10,8),
