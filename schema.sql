@@ -38,3 +38,19 @@ CREATE TABLE IF NOT EXISTS earthquakes_processed (
     depth_scaled            NUMERIC(10,6),
     latitude_scaled         NUMERIC(10,6),
     longitude_scaled        NUMERIC(10,6),
+
+    -- One-hot encoded mag_type
+    magtype_md              SMALLINT        DEFAULT 0,
+    magtype_ml              SMALLINT        DEFAULT 0,
+    magtype_mw              SMALLINT        DEFAULT 0,
+    magtype_mwb             SMALLINT        DEFAULT 0,
+    magtype_mwc             SMALLINT        DEFAULT 0,
+    magtype_mwr             SMALLINT        DEFAULT 0,
+    magtype_mww             SMALLINT        DEFAULT 0,
+    magtype_other           SMALLINT        DEFAULT 0,
+
+    -- Pipeline metadata 
+    pipeline_version        TEXT,
+    processed_at            TIMESTAMPTZ     DEFAULT NOW()
+);
+
