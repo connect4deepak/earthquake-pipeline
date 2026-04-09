@@ -54,3 +54,13 @@ CREATE TABLE IF NOT EXISTS earthquakes_processed (
     processed_at            TIMESTAMPTZ     DEFAULT NOW()
 );
 
+-- Indexes for common analytics queries
+CREATE INDEX IF NOT EXISTS idx_ep_event_time     ON earthquakes_processed (event_time);
+CREATE INDEX IF NOT EXISTS idx_ep_magnitude      ON earthquakes_processed (magnitude);
+CREATE INDEX IF NOT EXISTS idx_ep_mag_category   ON earthquakes_processed (mag_category);
+CREATE INDEX IF NOT EXISTS idx_ep_depth_category ON earthquakes_processed (depth_category);
+CREATE INDEX IF NOT EXISTS idx_ep_location       ON earthquakes_processed (latitude, longitude);
+
+COMMENT ON TABLE earthquakes_processed IS
+    'Cleaned, feature-engineered and normalised earthquake data.
+     Populated by the Python preprocessing pipeline (pipeline.py).';
