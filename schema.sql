@@ -32,3 +32,9 @@ CREATE TABLE IF NOT EXISTS earthquakes_processed (
         -- CHECK (depth_category IN ('shallow','intermediate','deep')),
     distance_from_ref_km    NUMERIC(10,3),
     is_outlier              BOOLEAN         DEFAULT FALSE,
+
+    -- Scaled numerics 
+    magnitude_scaled        NUMERIC(10,6),
+    depth_scaled            NUMERIC(10,6),
+    latitude_scaled         NUMERIC(10,6),
+    longitude_scaled        NUMERIC(10,6),
