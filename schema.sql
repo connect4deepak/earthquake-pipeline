@@ -24,3 +24,11 @@ CREATE TABLE IF NOT EXISTS earthquakes_processed (
     hour_cos                NUMERIC(10,8),
     month_sin               NUMERIC(10,8),
     month_cos               NUMERIC(10,8),
+
+    -- Engineered features 
+    mag_category            TEXT,
+        -- CHECK (mag_category IN ('micro','minor','light','moderate','strong','major','great')),
+    depth_category          TEXT,
+        -- CHECK (depth_category IN ('shallow','intermediate','deep')),
+    distance_from_ref_km    NUMERIC(10,3),
+    is_outlier              BOOLEAN         DEFAULT FALSE,
