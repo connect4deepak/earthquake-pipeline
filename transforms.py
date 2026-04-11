@@ -29,3 +29,22 @@ def _load_or_fit_scaler(df: pd.DataFrame) -> MinMaxScaler:
             pickle.dump(scaler, f)
         logger.info(f"[transforms] Fitted new MinMaxScaler and saved to '{SCALER_PATH}'.")
     return scaler
+
+# Apply Min-Max scaling and append *_scaled columns
+def scale_numeric(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    scaler = _load_or_fit_scaler(df)
+    scaled_values = scaler.transform(df[SCALE_COLS].fillna(0))
+    scaled_df = pd.DataFrame(
+        scaled_values,
+        columns=SCALE_COLS,
+        index=df.index,
+    )
+
+    for raw_col, out_col in SCALE_OUTPUT.items():
+        df[out_col] = scaled_df[raw_col].round(6)
+
+    logger.info(
+        f"[transforms] Min-Max scaling applied to: {SCALE_COLS}."
+    )
+    return df
