@@ -16,3 +16,16 @@ SCALE_OUTPUT = {
     "latitude":   "latitude_scaled",
     "longitude":  "longitude_scaled",
 }
+
+def _load_or_fit_scaler(df: pd.DataFrame) -> MinMaxScaler:
+    if os.path.exists(SCALER_PATH):
+        with open(SCALER_PATH, "rb") as f:
+            scaler = pickle.load(f)
+        logger.info(f"[transforms] Loaded existing scaler from '{SCALER_PATH}'.")
+    else:
+        scaler = MinMaxScaler()
+        scaler.fit(df[SCALE_COLS].dropna())
+        with open(SCALER_PATH, "wb") as f:
+            pickle.dump(scaler, f)
+        logger.info(f"[transforms] Fitted new MinMaxScaler and saved to '{SCALER_PATH}'.")
+    return scaler
