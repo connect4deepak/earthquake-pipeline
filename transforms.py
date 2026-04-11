@@ -48,3 +48,28 @@ def scale_numeric(df: pd.DataFrame) -> pd.DataFrame:
         f"[transforms] Min-Max scaling applied to: {SCALE_COLS}."
     )
     return df
+
+# Categorical Encoding 
+TOP_N_MAGTYPES = 8  
+
+def encode_categorical(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    # mag_type one-hot encoding 
+    if "mag_type" in df.columns:
+        top_types = (
+            df["mag_type"].value_counts().nlargest(TOP_N_MAGTYPES).index.tolist()
+        )
+        df["mag_type_clean"] = df["mag_type"].where(
+            df["mag_type"].isin(top_types), other="other"
+        )
+
+        dummies = pd.get_dummies(
+            df["mag_type_clean"],
+            prefix="magtype",
+            dtype=np.int8,
+        )
+        df = pd.concat([df, dummies], axis=1)
+        df.drop(columns=["mag_type_clean"], inplace=True)
+        logger.info(
+            f"[transforms] mag_type one-hot encoded: {list(dummies.columns)}"
+        )
