@@ -90,3 +90,17 @@ def encode_categorical(df: pd.DataFrame) -> pd.DataFrame:
 
     logger.info("[transforms] Categorical encoding complete.")
     return df
+
+#  Select & Order Final Columns 
+FINAL_COLUMNS = [
+    # identifiers / raw fields
+    "raw_id", "magnitude", "latitude", "longitude", "depth_km",
+    "event_time", "place", "mag_type", "event_type", "status",
+    # time features
+    "year", "month", "day_of_week", "hour", "is_weekend",
+    "hour_sin", "hour_cos", "month_sin", "month_cos",
+    # engineered features
+    "mag_category", "depth_category", "distance_from_ref_km",
+    # scaled numerics
+    "magnitude_scaled", "depth_scaled", "latitude_scaled", "longitude_scaled",
+]
