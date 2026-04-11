@@ -119,3 +119,14 @@ def select_final_columns(df: pd.DataFrame) -> pd.DataFrame:
     logger.info(f"[transforms] Final column set ({len(df.columns)} cols): {list(df.columns)}")
     return df
 
+# Orchestrator 
+def run_transforms(df: pd.DataFrame) -> pd.DataFrame:
+    logger.info("=" * 60)
+    logger.info("STAGE 3 — Transformations (Scaling & Encoding)")
+    logger.info("=" * 60)
+    df = scale_numeric(df)
+    df = encode_categorical(df)
+    df = select_final_columns(df)
+
+    logger.info(f"Transformations complete. Shape: {df.shape}")
+    return df
