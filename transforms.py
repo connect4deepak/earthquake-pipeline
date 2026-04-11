@@ -73,3 +73,20 @@ def encode_categorical(df: pd.DataFrame) -> pd.DataFrame:
         logger.info(
             f"[transforms] mag_type one-hot encoded: {list(dummies.columns)}"
         )
+
+    # mag_category ordered categorical
+    if "mag_category" in df.columns:
+        mag_order = ["micro", "minor", "light", "moderate", "strong", "major", "great"]
+        df["mag_category"] = pd.Categorical(
+            df["mag_category"], categories=mag_order, ordered=True
+        )
+
+    # depth_category ordered categorical 
+    if "depth_category" in df.columns:
+        depth_order = ["shallow", "intermediate", "deep"]
+        df["depth_category"] = pd.Categorical(
+            df["depth_category"], categories=depth_order, ordered=True
+        )
+
+    logger.info("[transforms] Categorical encoding complete.")
+    return df
