@@ -104,3 +104,18 @@ FINAL_COLUMNS = [
     # scaled numerics
     "magnitude_scaled", "depth_scaled", "latitude_scaled", "longitude_scaled",
 ]
+
+# one-hot cols excluded from DB; mag_type text col is sufficient
+def select_final_columns(df: pd.DataFrame) -> pd.DataFrame:
+    magtype_cols = []  
+    keep = [c for c in FINAL_COLUMNS if c in df.columns]
+    df = df[keep].copy()
+
+    # Convert ordered categoricals to string for PostgreSQL compatibility
+    for col in ["mag_category", "depth_category"]:
+        if col in df.columns:
+            df[col] = df[col].astype(str)
+
+    logger.info(f"[transforms] Final column set ({len(df.columns)} cols): {list(df.columns)}")
+    return df
+
