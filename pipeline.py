@@ -17,3 +17,15 @@ from cleaning import run_cleaning
 from features import run_feature_engineering
 from transforms import run_transforms
 
+# Logging setup 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s  %(levelname)-8s  %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler("pipeline.log"),
+    ],
+)
+logger = logging.getLogger(__name__)
+PIPELINE_VERSION = "1.0.0"
