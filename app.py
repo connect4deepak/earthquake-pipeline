@@ -77,3 +77,20 @@ def api_charts():
         ORDER BY CASE depth_category
             WHEN 'shallow' THEN 1 WHEN 'intermediate' THEN 2 WHEN 'deep' THEN 3 END;
     """)
+
+    # Events per hour (activity pattern)
+    hourly = query_db(f"""
+        SELECT hour, COUNT(*) AS count
+        FROM {PROCESSED_TABLE}
+        GROUP BY hour ORDER BY hour;
+    """)
+
+    # Events per day of week
+    dow_map = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
+    dow_raw = query_db(f"""
+        SELECT day_of_week, COUNT(*) AS count
+        FROM {PROCESSED_TABLE}
+        GROUP BY day_of_week ORDER BY day_of_week;
+    """)
+    dow = [{"day": dow_map.get(r["day_of_week"], r["day_of_week"]), "count": r["count"]}
+           for r in dow_raw]
