@@ -175,3 +175,27 @@ def api_map():
         if isinstance(r.get("event_time"), datetime):
             r["event_time"] = r["event_time"].strftime("%Y-%m-%d %H:%M")
     return jsonify(points)
+
+@app.route("/api/run", methods=["POST"])
+def api_run():
+    mode = request.json.get("mode", "incremental")
+    flag = "--incremental" if mode == "incremental" else ""
+    pipeline_path = os.path.join(PIPELINE_DIR, "pipeline.py")
+    cmd = [sys.executable, pipeline_path]
+    if flag:
+        cmd.append(flag)
+    try:
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=120
+        )
+        return jsonify({
+            "status": "ok" if result.returncode == 0 else "error",
+            "stdout": result.stdout[-3000:],   # last 3000 chars
+            "stderr": result.stderr[-1000:],
+        })
+    except subprocess.TimeoutExpired:
+        return jsonify({"status": "timeout", "stdout": "", "stderr": "Pipeline timed out after 120s"})
+
+#  Run 
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080, debug=False)
