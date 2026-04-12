@@ -114,3 +114,21 @@ def run_pipeline(incremental: bool = False) -> pd.DataFrame:
     if raw_df.empty:
         logger.info("No new data to process. Pipeline exiting.")
         return pd.DataFrame()
+
+    # Cleaning & Validation 
+    cleaned_df = run_cleaning(raw_df.copy())
+    if cleaned_df.empty:
+        logger.warning("All rows were dropped during cleaning. Nothing to save.")
+        return pd.DataFrame()
+    # Feature Engineering 
+    featured_df = run_feature_engineering(cleaned_df)
+    # Transformations 
+    processed_df = run_transforms(featured_df)
+    # Tag with pipeline version 
+    processed_df["pipeline_version"] = PIPELINE_VERSION
+    # Save to PostgreSQL 
+    save_processed(processed_df)
+    # Summary report 
+    elapsed = time.time() - start
+    generate_report(raw_df, processed_df, elapsed)
+    return processed_df
