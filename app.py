@@ -117,3 +117,11 @@ def api_charts():
         if isinstance(r.get("day"), datetime) or hasattr(r.get("day"), "isoformat"):
             r["day"] = r["day"].isoformat()
 
+    return jsonify({
+        "mag_categories": mag_cats,
+        "depth_categories": depth_cats,
+        "hourly": hourly,
+        "dow": dow,
+        "mag_histogram": mag_hist,
+        "timeline": timeline,
+    })
