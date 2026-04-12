@@ -55,3 +55,25 @@ def api_stats():
         if isinstance(v, datetime):
             stats[k] = v.isoformat()
     return jsonify(stats)
+
+@app.route("/api/charts")
+def api_charts():
+
+    # Magnitude category counts
+    mag_cats = query_db(f"""
+        SELECT mag_category, COUNT(*) AS count
+        FROM {PROCESSED_TABLE}
+        GROUP BY mag_category
+        ORDER BY CASE mag_category
+            WHEN 'micro'    THEN 1 WHEN 'minor'    THEN 2 WHEN 'light'   THEN 3
+            WHEN 'moderate' THEN 4 WHEN 'strong'   THEN 5 WHEN 'major'   THEN 6
+            WHEN 'great'    THEN 7 ELSE 8 END;
+    """)
+    # Depth category counts
+    depth_cats = query_db(f"""
+        SELECT depth_category, COUNT(*) AS count
+        FROM {PROCESSED_TABLE}
+        GROUP BY depth_category
+        ORDER BY CASE depth_category
+            WHEN 'shallow' THEN 1 WHEN 'intermediate' THEN 2 WHEN 'deep' THEN 3 END;
+    """)
