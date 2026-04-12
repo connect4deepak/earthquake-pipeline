@@ -100,3 +100,17 @@ def run_pipeline(incremental: bool = False) -> pd.DataFrame:
     logger.info("║     EARTHQUAKE DATA PREPROCESSING PIPELINE               ║")
     logger.info(f"║     Mode: {'INCREMENTAL' if incremental else 'FULL':10}  Version: {PIPELINE_VERSION:10}              ║")
     logger.info("╚══════════════════════════════════════════════════════════╝")
+
+    #  Ensure destination table exists 
+    create_processed_table()
+    # Load raw data 
+    if incremental:
+        last_id = get_last_processed_id()
+        logger.info(f"Incremental mode: loading rows with raw_id > {last_id}")
+        raw_df = load_new_earthquakes(since_id=last_id)
+    else:
+        raw_df = load_raw_earthquakes()
+
+    if raw_df.empty:
+        logger.info("No new data to process. Pipeline exiting.")
+        return pd.DataFrame()
