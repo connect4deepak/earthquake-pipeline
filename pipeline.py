@@ -81,3 +81,22 @@ def generate_report(
 
     print("=" * 60)
     print()    
+
+# Main Entry Point 
+def run_pipeline(incremental: bool = False) -> pd.DataFrame:
+    """
+    Execute the full pipeline.
+    Parameters
+    ----------
+    incremental : bool
+        If True, only process rows not yet in the processed table.
+    Returns
+    -------
+    pd.DataFrame
+        The final processed DataFrame (also saved to PostgreSQL).
+    """
+    start = time.time()
+    logger.info("╔══════════════════════════════════════════════════════════╗")
+    logger.info("║     EARTHQUAKE DATA PREPROCESSING PIPELINE               ║")
+    logger.info(f"║     Mode: {'INCREMENTAL' if incremental else 'FULL':10}  Version: {PIPELINE_VERSION:10}              ║")
+    logger.info("╚══════════════════════════════════════════════════════════╝")
