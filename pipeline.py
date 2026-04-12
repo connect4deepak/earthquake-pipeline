@@ -54,3 +54,30 @@ def generate_report(
     print(f"  Output rows    : {rows_out:,}  ({pct_kept:.1f}% retained)")
     print(f"  Dropped rows   : {dropped:,}")
     print()
+
+    if not processed_df.empty:
+        print(f"  Date range     : {processed_df['event_time'].min()} → "
+              f"{processed_df['event_time'].max()}")
+        print(f"  Magnitude      : {processed_df['magnitude'].min():.1f} – "
+              f"{processed_df['magnitude'].max():.1f}  "
+              f"(mean {processed_df['magnitude'].mean():.2f})")
+        print(f"  Depth (km)     : {processed_df['depth_km'].min():.1f} – "
+              f"{processed_df['depth_km'].max():.1f}  "
+              f"(mean {processed_df['depth_km'].mean():.2f})")
+        print()
+
+        if "mag_category" in processed_df.columns:
+            print("  Mag category breakdown:")
+            cats = processed_df["mag_category"].value_counts().sort_index()
+            for cat, cnt in cats.items():
+                bar = "█" * min(int(cnt / max(cats) * 30), 30)
+                print(f"    {cat:<12} {cnt:>6,}  {bar}")
+        print()
+
+        if "depth_category" in processed_df.columns:
+            print("  Depth category breakdown:")
+            for cat, cnt in processed_df["depth_category"].value_counts().items():
+                print(f"    {cat:<14} {cnt:>6,}")
+
+    print("=" * 60)
+    print()    
