@@ -161,3 +161,17 @@ def api_table():
             r["event_time"] = r["event_time"].strftime("%Y-%m-%d %H:%M")
     return jsonify({"total": total, "page": page, "per_page": per_page, "rows": rows})
 
+@app.route("/api/map")
+def api_map():
+    points = query_db(f"""
+        SELECT
+            latitude, longitude, magnitude, mag_category,
+            place, depth_km, event_time
+        FROM {PROCESSED_TABLE}
+        ORDER BY event_time DESC
+        LIMIT 1000;
+    """)
+    for r in points:
+        if isinstance(r.get("event_time"), datetime):
+            r["event_time"] = r["event_time"].strftime("%Y-%m-%d %H:%M")
+    return jsonify(points)
