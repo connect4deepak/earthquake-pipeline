@@ -125,3 +125,21 @@ def api_charts():
         "mag_histogram": mag_hist,
         "timeline": timeline,
     })
+
+@app.route("/api/table")
+def api_table():
+    page     = int(request.args.get("page", 1))
+    per_page = int(request.args.get("per_page", 20))
+    offset   = (page - 1) * per_page
+    mag_filter   = request.args.get("mag_category", "")
+    depth_filter = request.args.get("depth_category", "")
+
+    where_clauses, params = [], []
+    if mag_filter:
+        where_clauses.append("mag_category = %s")
+        params.append(mag_filter)
+    if depth_filter:
+        where_clauses.append("depth_category = %s")
+        params.append(depth_filter)
+
+ 
