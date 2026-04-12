@@ -132,3 +132,26 @@ def run_pipeline(incremental: bool = False) -> pd.DataFrame:
     elapsed = time.time() - start
     generate_report(raw_df, processed_df, elapsed)
     return processed_df
+
+# CLI 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Earthquake Data Acquisition & Preprocessing Pipeline"
+    )
+    parser.add_argument(
+        "--incremental",
+        action="store_true",
+        help="Only process rows not yet in the processed table.",
+    )
+    parser.add_argument(
+        "--setup",
+        action="store_true",
+        help="Create the processed table and exit (no data processing).",
+    )
+    args = parser.parse_args()
+
+    if args.setup:
+        create_processed_table()
+        print("Schema setup complete.")
+        sys.exit(0)
+    run_pipeline(incremental=args.incremental)
