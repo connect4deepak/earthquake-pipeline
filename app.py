@@ -94,3 +94,26 @@ def api_charts():
     """)
     dow = [{"day": dow_map.get(r["day_of_week"], r["day_of_week"]), "count": r["count"]}
            for r in dow_raw]
+
+    # Magnitude distribution histogram (bins of 0.5)
+    mag_hist = query_db(f"""
+        SELECT
+            ROUND((magnitude / 0.5)::numeric, 0) * 0.5 AS bin,
+            COUNT(*) AS count
+        FROM {PROCESSED_TABLE}
+        GROUP BY bin ORDER BY bin;
+    """)
+
+    # Events over time (daily)
+    timeline = query_db(f"""
+        SELECT
+            DATE(event_time AT TIME ZONE 'UTC') AS day,
+            COUNT(*) AS count,
+            ROUND(AVG(magnitude)::numeric, 2)   AS avg_mag
+        FROM {PROCESSED_TABLE}
+        GROUP BY day ORDER BY day;
+    """)
+    for r in timeline:
+        if isinstance(r.get("day"), datetime) or hasattr(r.get("day"), "isoformat"):
+            r["day"] = r["day"].isoformat()
+
