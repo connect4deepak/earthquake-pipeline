@@ -25,3 +25,33 @@ def query_db(sql: str, params=None) -> list[dict]:
 def query_one(sql: str, params=None) -> dict:
     rows = query_db(sql, params)
     return rows[0] if rows else {}
+
+# Routes 
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+@app.route("/api/stats")
+def api_stats():
+    stats = query_one(f"""
+        SELECT
+            COUNT(*)                                        AS total_processed,
+            ROUND(AVG(magnitude)::numeric, 2)               AS avg_magnitude,
+            ROUND(MAX(magnitude)::numeric, 2)               AS max_magnitude,
+            ROUND(MIN(magnitude)::numeric, 2)               AS min_magnitude,
+            ROUND(AVG(depth_km)::numeric, 2)                AS avg_depth_km,
+            ROUND(MAX(depth_km)::numeric, 2)                AS max_depth_km,
+            ROUND(AVG(distance_from_ref_km)::numeric, 0)    AS avg_distance_km,
+            0 AS outlier_count,
+            MIN(event_time)                                 AS earliest_event,
+            MAX(event_time)                                 AS latest_event
+        FROM {PROCESSED_TABLE};
+    """)
+
+    raw = query_one(f"SELECT COUNT(*) AS raw_count FROM {RAW_TABLE};")
+    stats["raw_count"] = raw.get("raw_count", 0)
+    # Serialise datetimes
+    for k, v in stats.items():
+        if isinstance(v, datetime):
+            stats[k] = v.isoformat()
+    return jsonify(stats)
