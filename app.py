@@ -142,4 +142,22 @@ def api_table():
         where_clauses.append("depth_category = %s")
         params.append(depth_filter)
 
- 
+    where = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+    total = query_one(f"SELECT COUNT(*) AS n FROM {PROCESSED_TABLE} {where};", params)["n"]
+
+    rows = query_db(f"""
+        SELECT
+            raw_id, magnitude, mag_category, depth_km, depth_category,
+            latitude, longitude, place, event_time, status,
+            distance_from_ref_km, magnitude_scaled
+        FROM {PROCESSED_TABLE}
+        {where}
+        ORDER BY event_time DESC
+        LIMIT %s OFFSET %s;
+    """, params + [per_page, offset])
+
+    for r in rows:
+        if isinstance(r.get("event_time"), datetime):
+            r["event_time"] = r["event_time"].strftime("%Y-%m-%d %H:%M")
+    return jsonify({"total": total, "page": page, "per_page": per_page, "rows": rows})
+
