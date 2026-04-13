@@ -57,3 +57,17 @@ class TestSelectFinalColumns(unittest.TestCase):
     def test_junk_columns_dropped(self):
         self.assertNotIn("junk_col_a", self.out.columns)
         self.assertNotIn("junk_col_b", self.out.columns)
+
+    def test_required_columns_present(self):
+        for col in ["raw_id","magnitude","latitude","longitude","depth_km","event_time"]:
+            self.assertIn(col, self.out.columns)
+
+    def test_categorical_cols_are_string_dtype(self):
+        for col in ["mag_category","depth_category"]:
+            if col in self.out.columns:
+                dtype = self.out[col].dtype
+                self.assertTrue(
+                    pd.api.types.is_string_dtype(dtype) or
+                    pd.api.types.is_object_dtype(dtype),
+                    msg=f"{col} dtype {dtype} is not string-like"
+                )
