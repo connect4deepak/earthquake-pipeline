@@ -30,17 +30,17 @@ analytics and visualisation.
 | 70 – 300 km| Intermediate | Reduced but still significant surface impact |
 | > 300 km   | Deep         | Rarely causes surface damage |
 
-app.py — Earthquake Pipeline Flask Dashboard
-============================================
-Routes
-  GET  /              → main dashboard (stats + charts)
-  GET  /api/stats     → KPI summary (counts, avg/max magnitude, depth, distance)
-  GET  /api/charts    → Chart data (mag/depth categories, hourly, timeline, histogram)
-  GET  /api/table     → Paginated processed data with mag/depth filters
-  GET  /api/map.      → Latest 1000 events for map (lat, lon, magnitude, place) 
-  POST /api/run.      → Trigger pipeline run (`{"mode": "incremental" \| "full"}`) 
-  POST /api/run-tests → Run test suite (`{"test_file": "all" \| "transforms" \| "integration"}`) 
-"""
+### REST API endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/` | Dashboard UI |
+| GET | `/api/stats` | KPI summary (counts, avg/max magnitude, depth, distance) |
+| GET | `/api/charts` | Chart data (mag/depth categories, hourly, timeline, histogram) |
+| GET | `/api/table` | Paginated processed data with mag/depth filters |
+| GET | `/api/map` | Latest 1000 events for map (lat, lon, magnitude, place) |
+| POST | `/api/run` | Trigger pipeline run (`{"mode": "incremental" \| "full"}`) |
+| POST | `/api/run-tests` | Run test suite (`{"test_file": "all" \| "transforms" \| "integration"}`) |
 
 ## Architecture
 ```
