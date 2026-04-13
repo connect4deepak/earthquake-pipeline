@@ -3,7 +3,7 @@ DB_CONFIG = {
     "port":     5432,
     "dbname":   "earthquake_db",
     "user":     "root",
-    "password": "root",   # ← update this
+    "password": "root",  
 }
 
 # Raw table written by cron job
