@@ -47,3 +47,20 @@ class TestFlaskAPIIntegration(unittest.TestCase):
     def test_stats_content_type_is_json(self):
         resp = self.client.get("/api/stats")
         self.assertIn("application/json", resp.content_type)
+
+    def test_stats_has_required_keys(self):
+        resp = self.client.get("/api/stats")
+        data = json.loads(resp.data)
+        required_keys = [
+            "total_processed", "avg_magnitude", "max_magnitude",
+            "min_magnitude",   "avg_depth_km",  "outlier_count",
+            "raw_count",
+        ]
+        for key in required_keys:
+            self.assertIn(key, data, msg=f"Missing key in /api/stats: '{key}'")
+
+    @unittest.skipUnless(TABLE_HAS_DATA, "Table is empty")
+    def test_stats_processed_count_positive(self):
+        resp = self.client.get("/api/stats")
+        data = json.loads(resp.data)
+        self.assertGreater(int(data["total_processed"]), 0)
