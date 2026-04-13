@@ -71,3 +71,23 @@ class TestSelectFinalColumns(unittest.TestCase):
                     pd.api.types.is_object_dtype(dtype),
                     msg=f"{col} dtype {dtype} is not string-like"
                 )
+
+# run_transforms 
+class TestRunTransforms(unittest.TestCase):
+    def setUp(self):
+        _remove_scaler()
+        self.df  = make_df(n=30)
+        self.out = run_transforms(self.df)
+
+    def test_output_is_dataframe(self):
+        self.assertIsInstance(self.out, pd.DataFrame)
+
+    def test_scaled_columns_in_output(self):
+        for col in ["magnitude_scaled","depth_scaled","latitude_scaled","longitude_scaled"]:
+            self.assertIn(col, self.out.columns)
+
+    def test_scaled_values_bounded(self):
+        for col in ["magnitude_scaled","depth_scaled"]:
+            vals = self.out[col].dropna()
+            self.assertGreaterEqual(vals.min(), 0.0 - 1e-4)
+            self.assertLessEqual(vals.max(),    1.0 + 1e-4)
