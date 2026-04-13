@@ -196,6 +196,39 @@ def api_run():
     except subprocess.TimeoutExpired:
         return jsonify({"status": "timeout", "stdout": "", "stderr": "Pipeline timed out after 120s"})
 
-#  Run 
+@app.route("/api/run-tests", methods=["POST"])
+def api_run_tests():
+    test_file = request.json.get("test_file", "all")
+    t_transforms  = os.path.join(PIPELINE_DIR, "tests/test_transforms.py")
+    t_integration = os.path.join(PIPELINE_DIR, "tests/test_integration.py")
+
+    test_map = {
+        "transforms":  [sys.executable, t_transforms,  "-v"],
+        "integration": [sys.executable, t_integration, "-v"],
+        "all":         [sys.executable, "-m", "unittest",
+                        t_transforms, t_integration, "-v"],
+    }
+    cmd = test_map.get(test_file, test_map["all"])
+
+    try:
+        result = subprocess.run(
+            cmd, capture_output=True, text=True,
+            timeout=60, cwd=PIPELINE_DIR
+        )
+        output  = result.stderr + result.stdout
+        passed  = output.count(" ok")
+        failed  = output.count("FAIL:") + output.count("ERROR:")
+        skipped = output.count(" skipped")
+        return jsonify({
+            "status":  "ok" if result.returncode == 0 else "failed",
+            "output":  output,
+            "passed":  passed,
+            "failed":  failed,
+            "skipped": skipped,
+        })
+    except subprocess.TimeoutExpired:
+        return jsonify({"status": "timeout", "output": "Tests timed out after 60s."})
+
+# Run
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=False)

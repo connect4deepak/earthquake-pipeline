@@ -278,6 +278,105 @@
     .chart-card.wide { grid-column: span 1; }
     header { flex-direction: column; gap: 14px; }
   }
+
+  /* ── Test Runner ── */
+  .test-runner-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 22px; margin-bottom: 24px;
+  }
+  .test-runner-top {
+    display: flex; gap: 12px; align-items: center;
+    flex-wrap: wrap; margin-bottom: 18px;
+  }
+  .test-suite-select {
+    font-family: 'Space Mono', monospace; font-size: .72rem;
+    background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); padding: 7px 12px; cursor: pointer;
+  }
+  .test-suite-select:focus { outline: none; border-color: var(--accent3); }
+
+  .test-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px; margin-bottom: 16px;
+  }
+  .test-stat {
+    background: var(--bg); border: 1px solid var(--border);
+    padding: 12px 14px; text-align: center;
+  }
+  .test-stat .num {
+    font-size: 1.6rem; font-weight: 800; line-height: 1;
+  }
+  .test-stat .lbl {
+    font-family: 'Space Mono', monospace;
+    font-size: .58rem; letter-spacing: .08em;
+    color: var(--muted); margin-top: 5px; text-transform: uppercase;
+  }
+  .num-total  { color: var(--accent3); }
+  .num-pass   { color: var(--green); }
+  .num-fail   { color: var(--accent2); }
+  .num-skip   { color: var(--yellow); }
+
+  .test-banner {
+    font-family: 'Space Mono', monospace;
+    font-size: .72rem; letter-spacing: .06em;
+    padding: 10px 14px; margin-bottom: 14px;
+    border-left: 3px solid; display: none;
+  }
+  .test-banner.pass { border-color: var(--green);   color: var(--green);   background: rgba(74,222,128,.07); }
+  .test-banner.fail { border-color: var(--accent2); color: var(--accent2); background: rgba(239,68,68,.07); }
+  .test-banner.skip { border-color: var(--yellow);  color: var(--yellow);  background: rgba(251,191,36,.07); }
+
+  .test-rows-wrap {
+    border: 1px solid var(--border);
+    margin-bottom: 14px; display: none;
+  }
+  .test-rows-header {
+    font-family: 'Space Mono', monospace;
+    font-size: .6rem; letter-spacing: .1em;
+    color: var(--muted); text-transform: uppercase;
+    padding: 8px 14px; background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .test-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(26,42,74,.4);
+    font-size: .8rem;
+  }
+  .test-row:last-child { border-bottom: none; }
+  .test-row:hover { background: rgba(249,115,22,.03); }
+  .t-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: .58rem; padding: 2px 8px;
+    letter-spacing: .04em; min-width: 48px; text-align: center;
+  }
+  .t-badge.ok    { background: rgba(74,222,128,.15);  color: var(--green); }
+  .t-badge.fail  { background: rgba(239,68,68,.15);   color: var(--accent2); }
+  .t-badge.error { background: rgba(239,68,68,.2);    color: var(--accent2); }
+  .t-badge.skip  { background: rgba(251,191,36,.12);  color: var(--yellow); }
+  .t-name   { flex: 1; font-family: 'Space Mono', monospace; font-size: .68rem; color: var(--text); }
+  .t-module { font-family: 'Space Mono', monospace; font-size: .6rem; color: var(--muted); }
+
+  .test-output-toggle {
+    font-family: 'Space Mono', monospace; font-size: .68rem;
+    color: var(--accent3); background: none; border: none;
+    cursor: pointer; padding: 0; margin-bottom: 8px; display: none;
+    letter-spacing: .04em;
+  }
+  .test-output-toggle:hover { text-decoration: underline; }
+  .test-raw-log {
+    font-family: 'Space Mono', monospace; font-size: .68rem;
+    color: var(--accent3); background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 14px; height: 200px; overflow-y: auto;
+    white-space: pre-wrap; word-break: break-all; display: none;
+  }
+  .test-placeholder {
+    font-family: 'Space Mono', monospace; font-size: .7rem;
+    color: var(--muted); padding: 24px 0; text-align: center;
+  }
 </style>
 </head>
 <body>
@@ -398,6 +497,38 @@
       <button class="btn btn-ghost"   onclick="runPipeline('full')">▶ RUN FULL</button>
     </div>
     <div class="runner-log" id="runnerLog">// Pipeline output will appear here...</div>
+  </div>
+
+  <!-- Test Runner -->
+  <div class="section-title">Test Runner</div>
+  <div class="test-runner-card">
+    <div class="test-runner-top">
+      <select class="test-suite-select" id="testSuite">
+        <option value="all">All tests</option>
+        <option value="transforms">test_transforms only</option>
+        <option value="integration">test_integration only</option>
+      </select>
+      <button class="btn btn-primary" id="testRunBtn" onclick="runTests()">▶ RUN TESTS</button>
+    </div>
+
+    <div class="test-summary-grid" id="testSummary" style="display:none;">
+      <div class="test-stat"><div class="num num-total" id="ts-total">0</div><div class="lbl">Total</div></div>
+      <div class="test-stat"><div class="num num-pass"  id="ts-pass">0</div><div class="lbl">Passed</div></div>
+      <div class="test-stat"><div class="num num-fail"  id="ts-fail">0</div><div class="lbl">Failed</div></div>
+      <div class="test-stat"><div class="num num-skip"  id="ts-skip">0</div><div class="lbl">Skipped</div></div>
+    </div>
+
+    <div class="test-banner" id="testBanner"></div>
+
+    <div class="test-rows-wrap" id="testRowsWrap">
+      <div class="test-rows-header">Test results</div>
+      <div id="testRowsList"></div>
+    </div>
+
+    <button class="test-output-toggle" id="testOutputToggle" onclick="toggleTestOutput()">SHOW RAW OUTPUT ↓</button>
+    <div class="test-raw-log" id="testRawLog"></div>
+
+    <div class="test-placeholder" id="testPlaceholder">// Choose a suite and click RUN TESTS</div>
   </div>
 
 </div><!-- /wrapper -->
@@ -668,6 +799,99 @@ async function runPipeline(mode) {
     log.textContent = '// Request failed: ' + e.message;
     toast('Failed to reach pipeline endpoint');
   }
+}
+
+// ── Test Runner ───────────────────────────────────────────────────────────
+let testOutputVisible = false;
+
+function toggleTestOutput() {
+  testOutputVisible = !testOutputVisible;
+  const log = $('testRawLog');
+  const btn = $('testOutputToggle');
+  log.style.display = testOutputVisible ? 'block' : 'none';
+  btn.textContent   = testOutputVisible ? 'HIDE RAW OUTPUT ↑' : 'SHOW RAW OUTPUT ↓';
+}
+
+function parseTestLines(output) {
+  const tests = [];
+  for (const line of output.split('\n')) {
+    const m = line.match(/^(\w[\w.]+)\s+\(([\w.]+)\)\s+\.\.\.\s+(.+)$/);
+    if (m) {
+      let s = m[3].trim().toLowerCase();
+      s = s.startsWith('fail') ? 'fail' : s.startsWith('error') ? 'error' : s.startsWith('skip') ? 'skip' : 'ok';
+      tests.push({ name: m[1], module: m[2], status: s });
+    }
+  }
+  return tests;
+}
+
+async function runTests() {
+  const suite = $('testSuite').value;
+  const btn   = $('testRunBtn');
+
+  btn.disabled     = true;
+  btn.innerHTML    = '<span class="spinner"></span>';
+  $('testPlaceholder').textContent  = '// Running tests...';
+  $('testPlaceholder').style.display = 'block';
+  $('testSummary').style.display     = 'none';
+  $('testBanner').style.display      = 'none';
+  $('testRowsWrap').style.display    = 'none';
+  $('testOutputToggle').style.display = 'none';
+  $('testRawLog').style.display      = 'none';
+  testOutputVisible = false;
+
+  try {
+    const res  = await fetch('/api/run-tests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ test_file: suite }),
+    });
+    const data = await res.json();
+    const raw  = data.output || '';
+
+    const tests   = parseTestLines(raw);
+    const passed  = data.passed  ?? tests.filter(t => t.status === 'ok').length;
+    const failed  = (data.failed ?? 0) + (data.errors ?? 0);
+    const skipped = data.skipped ?? tests.filter(t => t.status === 'skip').length;
+    const total   = tests.length || (passed + failed + skipped);
+
+    $('ts-total').textContent = total;
+    $('ts-pass').textContent  = passed;
+    $('ts-fail').textContent  = failed;
+    $('ts-skip').textContent  = skipped;
+    $('testSummary').style.display = 'grid';
+
+    const banner = $('testBanner');
+    banner.className = 'test-banner ' + (data.status === 'ok' ? 'pass' : 'fail');
+    banner.textContent = data.status === 'ok'
+      ? '✓ ALL TESTS PASSED'
+      : data.status === 'timeout'
+        ? '⚠ TESTS TIMED OUT'
+        : `✗ ${failed} TEST(S) FAILED`;
+    banner.style.display = 'block';
+
+    if (tests.length > 0) {
+      $('testRowsList').innerHTML = tests.map(t => `
+        <div class="test-row">
+          <span class="t-badge ${t.status}">${t.status.toUpperCase()}</span>
+          <span class="t-name">${t.name}</span>
+          <span class="t-module">${t.module}</span>
+        </div>`).join('');
+      $('testRowsWrap').style.display = 'block';
+    }
+
+    $('testRawLog').textContent = raw;
+    $('testOutputToggle').style.display = 'inline';
+    $('testPlaceholder').style.display  = 'none';
+
+    toast(data.status === 'ok' ? 'All tests passed ✓' : 'Test failures detected');
+  } catch(e) {
+    $('testPlaceholder').textContent = '// Error: ' + e.message;
+    toast('Failed to reach test endpoint');
+  }
+
+  btn.disabled  = false;
+  btn.innerHTML = '▶ RUN TESTS';
 }
 
 // ── Refresh all ───────────────────────────────────────────────────────────
