@@ -20,3 +20,12 @@ try:
     TABLE_HAS_DATA = _count > 0
 except Exception as _e:
     print(f"[integration] DB not available: {_e} — tests will be skipped.")
+
+# Import the Flask app 
+try:
+    from app import app as flask_app
+    flask_app.config["TESTING"] = True
+    FLASK_AVAILABLE = True
+except Exception as _fe:
+    print(f"[integration] Flask app import failed: {_fe}")
+    FLASK_AVAILABLE = False
