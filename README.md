@@ -4,7 +4,7 @@ USGS FDSNWS API, cleans it, analytical features, applies
 transformations, and writes the result to a PostgreSQL table ready for
 analytics and visualisation.
 
-## Access Flask Application - http://54.247.209.107:8080/
+## Live Dashboard — http://54.247.209.107:8080/
 
 # Earthquake Classification Guide
 
@@ -34,9 +34,12 @@ app.py — Earthquake Pipeline Flask Dashboard
 ============================================
 Routes
   GET  /              → main dashboard (stats + charts)
-  GET  /api/stats     → JSON summary stats
-  GET  /api/charts    → JSON data for all charts
-  GET  /api/table     → JSON paginated data table
+  GET  /api/stats     → KPI summary (counts, avg/max magnitude, depth, distance)
+  GET  /api/charts    → Chart data (mag/depth categories, hourly, timeline, histogram)
+  GET  /api/table     → Paginated processed data with mag/depth filters
+  GET  /api/map.      → Latest 1000 events for map (lat, lon, magnitude, place) 
+  POST /api/run.      → Trigger pipeline run (`{"mode": "incremental" \| "full"}`) 
+  POST /api/run-tests → Run test suite (`{"test_file": "all" \| "transforms" \| "integration"}`) 
 """
 
 ## Architecture
@@ -71,15 +74,17 @@ earthquakes_processed  (analytics-ready table)
 ## File Structure
 ```
 earthquake_pipeline/
- config.py          # DB credentials & thresholds
- db.py              # PostgreSQL read / write helpers
- cleaning.py        # Stage 1 — Cleaning & Validation
- features.py        # Stage 2 — Feature Engineering
- transforms.py      # Stage 3 — Scaling & Encoding
- pipeline.py        # Main orchestrator (entry point)
- schema.sql         # earthquakes_processed table
- requirements.txt   # Python dependencies
- README.md          # This file
+ config.py           # DB credentials & thresholds
+ db.py               # PostgreSQL read / write helpers
+ cleaning.py         # Stage 1 — Cleaning & Validation
+ features.py         # Stage 2 — Feature Engineering
+ transforms.py       # Stage 3 — Scaling & Encoding
+ pipeline.py         # Main orchestrator (entry point)
+ schema.sql          # earthquakes_processed table
+ requirements.txt    # Python dependencies
+ test_transforms.py  # Unit tests — transforms stage 
+ test_integration.py # Integration tests — Flask API endpoints 
+ README.md           
 ```
 
 ## Setup
@@ -97,7 +102,18 @@ pip install -r requirements.txt
 python pipeline.py --setup
 # or directly in psql:
 # psql -U postgres -d earthquake -f schema.sql
+
+# Run all tests
+python -m unittest test_transforms test_integration -v
+
+# Run only transform unit tests
+python test_transforms.py -v
+
+# Run only integration tests (requires live DB + Flask app)
+python test_integration.py -v
 ```
+
+From the dashboard UI, use the **Test Runner** section at the bottom of the page — select a suite and click **RUN TESTS** to see per-test results and raw output inline.
 
 ## Running the Pipeline
 
