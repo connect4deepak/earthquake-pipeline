@@ -91,3 +91,27 @@ class TestRunTransforms(unittest.TestCase):
             vals = self.out[col].dropna()
             self.assertGreaterEqual(vals.min(), 0.0 - 1e-4)
             self.assertLessEqual(vals.max(),    1.0 + 1e-4)
+
+    def test_categorical_columns_are_string_dtype(self):
+        for col in ["mag_category","depth_category"]:
+            if col in self.out.columns:
+                dtype = self.out[col].dtype
+                self.assertTrue(
+                    pd.api.types.is_string_dtype(dtype) or
+                    pd.api.types.is_object_dtype(dtype),
+                    msg=f"{col} dtype {dtype} is not string-like for PostgreSQL"
+                )
+
+    def test_no_extra_columns(self):
+        allowed = set(FINAL_COLUMNS) | {c for c in self.out.columns if c.startswith("magtype_")}
+        extra   = set(self.out.columns) - allowed
+        self.assertEqual(extra, set(), msg=f"Unexpected columns: {extra}")
+
+    def test_row_count_unchanged(self):
+        self.assertEqual(len(self.out), len(self.df))
+
+    def tearDown(self):
+        _remove_scaler()
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
