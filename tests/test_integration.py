@@ -64,3 +64,31 @@ class TestFlaskAPIIntegration(unittest.TestCase):
         resp = self.client.get("/api/stats")
         data = json.loads(resp.data)
         self.assertGreater(int(data["total_processed"]), 0)
+
+    @unittest.skipUnless(TABLE_HAS_DATA, "Table is empty")
+    def test_stats_avg_magnitude_in_valid_range(self):
+        resp = self.client.get("/api/stats")
+        data = json.loads(resp.data)
+        avg = float(data["avg_magnitude"])
+        self.assertGreaterEqual(avg, -2.0)
+        self.assertLessEqual(avg,   10.0)
+
+    @unittest.skipUnless(TABLE_HAS_DATA, "Table is empty")
+    def test_stats_max_gte_min_magnitude(self):
+        resp = self.client.get("/api/stats")
+        data = json.loads(resp.data)
+        self.assertGreaterEqual(
+            float(data["max_magnitude"]),
+            float(data["min_magnitude"])
+        )
+
+    def test_index_returns_200(self):
+        resp = self.client.get("/")
+        self.assertEqual(resp.status_code, 200)
+
+    def test_index_content_type_is_html(self):
+        resp = self.client.get("/")
+        self.assertIn("text/html", resp.content_type)
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
