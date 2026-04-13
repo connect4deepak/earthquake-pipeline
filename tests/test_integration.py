@@ -29,3 +29,21 @@ try:
 except Exception as _fe:
     print(f"[integration] Flask app import failed: {_fe}")
     FLASK_AVAILABLE = False
+
+@unittest.skipUnless(DB_AVAILABLE and FLASK_AVAILABLE,
+                     "DB or Flask app not available")
+
+class TestFlaskAPIIntegration(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.client = flask_app.test_client()
+
+    # test /api/stats 
+    def test_stats_returns_200(self):
+        resp = self.client.get("/api/stats")
+        self.assertEqual(resp.status_code, 200,
+                         msg=f"Expected 200, got {resp.status_code}")
+
+    def test_stats_content_type_is_json(self):
+        resp = self.client.get("/api/stats")
+        self.assertIn("application/json", resp.content_type)
