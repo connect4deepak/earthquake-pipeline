@@ -6,6 +6,39 @@ analytics and visualisation.
 
 ## Access Flask Application - http://54.247.209.107:8080/
 
+# Earthquake Classification Guide
+
+## Magnitude Category
+**Richter / Moment-Magnitude Labels (USGS):**
+
+| Magnitude Range | Category  | Description |
+|-----------------|----------|-------------|
+| < 2.0           | Micro    | Not felt by people |
+| 2.0 – 3.9       | Minor    | Felt slightly by some |
+| 4.0 – 4.9       | Light    | Felt by most, minor damage |
+| 5.0 – 5.9       | Moderate | Slight damage to buildings |
+| 6.0 – 6.9       | Strong   | Destructive in populated areas |
+| 7.0 – 7.9       | Major    | Serious damage over large areas |
+| ≥ 8.0           | Great    | Total destruction, tsunamis possible |
+
+## Depth Category
+**Standard USGS Seismological Classification:**
+
+| Depth Range | Category      | Description |
+|------------|--------------|-------------|
+| 0 – 70 km  | Shallow      | Causes most damage (closest to surface) |
+| 70 – 300 km| Intermediate | Reduced but still significant surface impact |
+| > 300 km   | Deep         | Rarely causes surface damage |
+
+app.py — Earthquake Pipeline Flask Dashboard
+============================================
+Routes
+  GET  /              → main dashboard (stats + charts)
+  GET  /api/stats     → JSON summary stats
+  GET  /api/charts    → JSON data for all charts
+  GET  /api/table     → JSON paginated data table
+"""
+
 ## Architecture
 ```
 earthquakes  (raw table, filled by cron job)
@@ -53,7 +86,7 @@ earthquake_pipeline/
 
 ```bash
 # 1. Activate your virtual environment
-source /path/to/venv/bin/activate
+source /home/deepak/venv/bin/activate
 
 # 2. Install dependencies
 pip install -r requirements.txt
@@ -78,11 +111,11 @@ python pipeline.py --incremental
 
 ### Add to crontab (run 5 minutes after the data-fetch cron job)
 ```cronjob
-# Data fetch  — every hour at :00
-0 * * * * /home/deepak/venv/bin/python /home/deepak/earthquake-pipeline/fetch_earthquakes.py
+# Data fetch  — every minute 
+*/1 * * * * /home/deepak/venv/bin/python /home/deepak/earthquake-pipeline/fetch_earthquakes.py
 
-# Pipeline    — every hour at :05 (gives the fetch job time to finish)
-5 * * * * /home/deepak/venv/bin/python /home/deepak/earthquake_pipeline/pipeline.py --incremental >> /var/log/eq_pipeline.log 2>&1
+# Pipeline    — every minute
+*/1 * * * * /home/deepak/venv/bin/python /home/deepak/earthquake_pipeline/pipeline.py --incremental >> /var/log/eq_pipeline.log 2>&1
 ```
 
 ## Features Produced
