@@ -152,4 +152,5 @@ python pipeline.py --incremental
 | `magtype_ml` … | int | One-hot encoded magnitude type |
 | `is_outlier` | bool | IQR outlier flag (row kept, not dropped) |
 
-## Project Note: For this project, referred to the Official Python Documentation for understanding libraries, functions and class, W3Schools for grasping core concepts, Claude and Stack Overflow for brainstorming ideas, frontend guidance, and troubleshooting and solutions.
+## Project Note: 
+For this project, referred to the Official Python Documentation for understanding libraries, functions and class, W3Schools for grasping core concepts, Claude and Stack Overflow for brainstorming ideas, frontend guidance, and troubleshooting and solutions.
